@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/vmw-pso/authentication-service/data"
+	"github.com/vmw-pso/toolkit"
 )
 
 func (s *server) handleSignup() http.HandlerFunc {
@@ -45,6 +46,34 @@ func (s *server) handleSignup() http.HandlerFunc {
 
 func (s *server) handleSignin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Signed in successfully"))
+		var requestPayload struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
+
+		if err := s.tools.ReadJSON(w, r, &requestPayload); err != nil {
+			s.tools.ErrorJSON(w, err, http.StatusBadRequest)
+			return
+		}
+
+		user, err := s.models.User.GetByEmail(s.DB, requestPayload.Email)
+		if err != nil {
+			s.tools.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		}
+
+		match, err := user.PasswordMatches(requestPayload.Password)
+		if err != nil || !match {
+			_ = s.tools.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		}
+
+		payload := toolkit.JSONResponse{
+			Error:   false,
+			Message: "Signed in",
+			Data:    user,
+		}
+
+		_ = s.tools.WriteJSON(w, http.StatusAccepted, payload)
 	}
 }
