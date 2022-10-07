@@ -37,7 +37,7 @@ func run(args []string) error {
 	addr := fmt.Sprintf(":%d", *port)
 
 	srv := newServer()
-	fmt.Printf("Starting front-end, listening on :%d\n", *port)
+	fmt.Printf("Starting authentication-service, listening on :%d\n", *port)
 	return http.ListenAndServe(addr, srv)
 }
 
