@@ -10,7 +10,7 @@ import (
 func (s *server) handleSignup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var requestPayload struct {
-			Name     string `json:"name"`
+			Username string `json:"username"`
 			Email    string `json:"email"`
 			Password string `json:"password"`
 		}
@@ -28,7 +28,7 @@ func (s *server) handleSignup() http.HandlerFunc {
 		}
 
 		user := data.User{
-			Name:         requestPayload.Name,
+			Username:     requestPayload.Username,
 			Email:        requestPayload.Email,
 			PasswordHash: hash,
 		}
