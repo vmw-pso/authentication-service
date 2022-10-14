@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/vmw-pso/authentication-service/data"
@@ -47,16 +48,18 @@ func (s *server) handleSignup() http.HandlerFunc {
 func (s *server) handleSignin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var requestPayload struct {
-			Email    string `json:"email"`
+			Username string `json:"username"`
 			Password string `json:"password"`
 		}
+
+		fmt.Println(requestPayload.Username)
 
 		if err := s.tools.ReadJSON(w, r, &requestPayload); err != nil {
 			s.tools.ErrorJSON(w, err, http.StatusBadRequest)
 			return
 		}
 
-		user, err := s.models.User.GetByEmail(s.DB, requestPayload.Email)
+		user, err := s.models.User.GetByUsername(s.DB, requestPayload.Username)
 		if err != nil {
 			s.tools.ErrorJSON(w, err, http.StatusUnauthorized)
 			return
@@ -68,10 +71,16 @@ func (s *server) handleSignin() http.HandlerFunc {
 			return
 		}
 
+		jwt, err := generateJWT(*user)
+		if err != nil {
+			s.tools.ErrorJSON(w, err, http.StatusInternalServerError)
+			return
+		}
+
 		payload := toolkit.JSONResponse{
 			Error:   false,
 			Message: "Signed in",
-			Data:    user,
+			Data:    jwt,
 		}
 
 		_ = s.tools.WriteJSON(w, http.StatusAccepted, payload)

@@ -26,14 +26,14 @@ type User struct {
 	PasswordHash string `json:"-"`
 }
 
-func (u *User) GetByEmail(db *sql.DB, email string) (*User, error) {
+func (u *User) GetByUsername(db *sql.DB, username string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, username, email, passwordHash from users where email = $1`
+	query := `select id, username, email, passwordHash from users where username = $1`
 
 	var user User
-	row := db.QueryRowContext(ctx, query, email)
+	row := db.QueryRowContext(ctx, query, username)
 
 	err := row.Scan(
 		&user.ID,
